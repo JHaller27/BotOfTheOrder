@@ -1,8 +1,9 @@
 from random import randint
 from discord.ext import commands
+import re
 
 
-class Dice(commands.Cog):
+class DiceCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self._bot = bot
 
@@ -15,9 +16,9 @@ class Dice(commands.Cog):
         await ctx.send(f'{rolls}\n{sum(rolls)}')
 
     @commands.command()
-    async def r(self, *args, **kwargs):
-        return await self.roll(*args, **kwargs)
+    async def r(self, ctx: commands.Context, roll_str: str):
+        pass
 
 
 def setup(bot):
-    bot.add_cog(Dice(bot))
+    bot.add_cog(DiceCog(bot))
