@@ -21,6 +21,50 @@ class DiceCog(commands.Cog):
     async def r(self, ctx: commands.Context, roll_str: str):
         pass
 
+    @staticmethod
+    def _unify_keep_drop(keep: bool, highest: bool, count: int, total: int) -> int:
+        """
+        Keep-highest = drop-lowest, and keep-lowest = drop-highest
+        Thus, we only need 2 possibilities: keep-highest and drop-highest
+        Convert keep/drop highest/lowest # into single signed-int where
+        +# = keep highest #
+        0 = ignore
+        -# = drop highest #
+        """
+        assert total > count
+
+        if not highest:
+            # kl/dl
+            count = total - count
+            # kl
+            if keep:
+                return -count
+
+        # dh
+        elif not keep:
+            return -count
+
+        # kh/dl
+        return count
+
+    @staticmethod
+    def _roll(x: int, y: int, ):
+        pass
+
 
 def setup(bot):
     bot.add_cog(DiceCog(bot))
+
+
+if __name__ == "__main__":
+    data_rows = [
+        ((True, True, 2, 5), 2),
+        ((True, False, 2, 5), -3),
+        ((False, True, 2, 5), -2),
+        ((False, False, 2, 5), 3),
+    ]
+
+    for args, expected in data_rows:
+        actual = DiceCog._unify_keep_drop(*args)
+        if actual != expected:
+            print(f"Expected {expected}, got {actual}")
