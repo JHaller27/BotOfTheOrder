@@ -19,7 +19,22 @@ class DiceCog(commands.Cog):
 
     @commands.command()
     async def r(self, ctx: commands.Context, roll_str: str):
-        pass
+        if m := DiceCog.DICE_REGEX.search(roll_str):
+            x = int(m['num'])
+            y = int(m['size'])
+            mod = 0
+            drop = 0
+            explode = m['explode'] is not None
+
+            if kd := m['kd']:
+                drop = DiceCog._unify_keep_drop(kd[0] == 'k', kd[1] == 'h', int(kd[2:]), x)
+
+            if m := m['mod']:
+                mod = int(m)
+
+            result = DiceCog._roll(x, y, drop, mod, explode)
+
+            await ctx.send(f'You rolled: {result}')
 
     @staticmethod
     def _unify_keep_drop(keep: bool, highest: bool, count: int, total: int) -> int:
@@ -46,9 +61,22 @@ class DiceCog(commands.Cog):
         return count
 
     @staticmethod
-    def _roll(x: int, y: int, ):
-        pass
+    def _roll(x: int, y: int, drop: int, mod: int, explode: bool) -> int:
+        rolls = sorted([randint(1, y) for _ in range(x)])
 
+        if drop < 0:
+            rolls = rolls[drop:]
+        elif drop > 0:
+            rolls = rolls[:drop]
+
+        if explode:
+            for r in rolls:
+                if r == y:
+                    rolls.append(randint(1, y))
+
+        total = sum(rolls) + mod
+
+        return total
 
 def setup(bot):
     bot.add_cog(DiceCog(bot))
