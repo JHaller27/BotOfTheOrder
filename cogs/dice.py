@@ -54,17 +54,3 @@ class DiceCog(commands.Cog):
 
 def setup(bot):
     bot.add_cog(DiceCog(bot))
-
-
-if __name__ == "__main__":
-    data_rows = [
-        ((True, True, 2, 5), 2),
-        ((True, False, 2, 5), -3),
-        ((False, True, 2, 5), -2),
-        ((False, False, 2, 5), 3),
-    ]
-
-    for args, expected in data_rows:
-        actual = DiceCog._unify_keep_drop(*args)
-        if actual != expected:
-            print(f"Expected {expected}, got {actual}")
