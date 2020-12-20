@@ -25,26 +25,24 @@ class DiceCog(commands.Cog):
     def _unify_keep_drop(keep: bool, highest: bool, count: int, total: int) -> int:
         """
         Keep-highest = drop-lowest, and keep-lowest = drop-highest
-        Thus, we only need 2 possibilities: keep-highest and drop-highest
-        Convert keep/drop highest/lowest # into single signed-int where
-        +# = keep highest #
-        0 = ignore
-        -# = drop highest #
+        Thus, we only need 2 possibilities: keep-highest (-) and keep-lowest (+)
+        Convert keep/drop highest/lowest # into single signed-int
         """
         assert total > count
 
-        if not highest:
-            # kl/dl
+        # dh/dl
+        if not keep:
             count = total - count
-            # kl
-            if keep:
+
+            # dl
+            if not highest:
                 return -count
 
-        # dh
-        elif not keep:
+        # kh
+        elif highest:
             return -count
 
-        # kh/dl
+        # kl/dh
         return count
 
     @staticmethod
