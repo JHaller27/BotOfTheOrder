@@ -10,15 +10,7 @@ class DiceCog(commands.Cog):
         self._bot = bot
 
     @commands.command()
-    async def roll(self, ctx: commands.Context, num: str, size: str) -> None:
-        num = int(num)
-        size = int(size)
-        rolls = [randint(1, size) for _ in range(num)]
-
-        await ctx.send(f'{rolls}\n{sum(rolls)}')
-
-    @commands.command()
-    async def r(self, ctx: commands.Context, roll_str: str):
+    async def roll(self, ctx: commands.Context, roll_str: str):
         if m := DiceCog.DICE_REGEX.search(roll_str):
             x = int(m['num'])
             y = int(m['size'])
