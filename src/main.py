@@ -1,9 +1,19 @@
+import json
+import discord
 from pathlib import Path
-from dotenv import load_dotenv
-import os
 
 
-ENV_DATA_PATH = Path('.') / 'data' / 'secrets.env'
-load_dotenv(ENV_DATA_PATH)
-BOT_TOKEN = os.getenv('TOKEN')
+client = discord.Client()
 
+
+@client.event
+async def on_ready():
+    print('Bot is ready!')
+
+
+env_data_path = Path('..') / 'data' / 'secrets.json'
+with open(env_data_path, 'r') as fp:
+    secrets = json.load(fp)
+
+BOT_TOKEN = secrets['DISCORD_TOKEN']
+client.run(BOT_TOKEN)

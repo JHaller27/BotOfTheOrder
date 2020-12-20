@@ -1,1 +1,2 @@
-data/secrets.env
+data/secrets.json
+.idea/
