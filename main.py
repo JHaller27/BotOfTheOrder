@@ -3,14 +3,13 @@ from discord.ext import commands
 from pathlib import Path
 
 
-bot = commands.Bot(command_prefix='/')
+class BotO(commands.Bot):
+    # noinspection PyMethodMayBeStatic
+    async def on_ready(self):
+        print('Bot is ready!')
 
 
-@bot.event
-async def on_ready():
-    print('Bot is ready!')
-
-
+bot = BotO(command_prefix='/')
 bot.load_extension('cogs.test')
 
 # Load secrets
