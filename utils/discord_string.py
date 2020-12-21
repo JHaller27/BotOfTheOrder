@@ -14,6 +14,10 @@ class DiscordString:
         joined = DiscordString(str(self) + str(other))
         return joined
 
+    def __radd__(self, other: 'DiscordString'):
+        joined = DiscordString(str(other) + str(self))
+        return joined
+
     def clear(self) -> 'DiscordString':
         self._txt = ''
         return self
