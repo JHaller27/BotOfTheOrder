@@ -110,3 +110,15 @@ class DiscordString:
     def toggle_strikethrough(self) -> 'DiscordString':
         self._txt += '~~'
         return self
+
+    def join(self, sep: str, itr, key=None):
+        if key is None:
+            def str_key(e):
+                return str(e)
+        else:
+            def str_key(e):
+                return str(key(e))
+
+        list_str = sep.join(map(str_key, itr))
+
+        self.add(list_str)
