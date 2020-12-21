@@ -176,7 +176,7 @@ class DiceCog(commands.Cog):
                     else:
                         ds.add(' + ').add(result)
             ds.add(') = ')
-            ds.add(total).add(' ').emoji('game_die')
+            ds.bold(total).add(' ').emoji('game_die')
 
             if last_msg is not None:
                 await last_msg
