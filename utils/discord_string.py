@@ -14,11 +14,13 @@ class DiscordString:
         self._txt = ''
         return self
 
-    def add(self, msg: str) -> 'DiscordString':
+    def add(self, msg) -> 'DiscordString':
+        if not isinstance(msg, str):
+            msg = str(msg)
         self._txt += msg
         return self
 
-    def pre(self, msg: str) -> 'DiscordString':
+    def pre(self, msg) -> 'DiscordString':
         toggle = self.toggle_pre_block if '\n' in msg or '\r' in msg else self.toggle_pre_line
 
         toggle()
@@ -27,7 +29,7 @@ class DiscordString:
 
         return self
 
-    def code(self, msg: str, language: str) -> 'DiscordString':
+    def code(self, msg, language) -> 'DiscordString':
         self.toggle_pre_block(language)
         self.add(msg)
         self.toggle_pre_block()
@@ -41,10 +43,12 @@ class DiscordString:
     def toggle_pre_block(self, language=None) -> 'DiscordString':
         self._txt += '```'
         if language:
+            if not isinstance(language, str):
+                language = str(language)
             self._txt += language
         return self
 
-    def bold(self, msg: str) -> 'DiscordString':
+    def bold(self, msg) -> 'DiscordString':
         self.toggle_bold()
         self.add(msg)
         self.toggle_bold()
@@ -54,7 +58,7 @@ class DiscordString:
         self._txt += '**'
         return self
 
-    def italic(self, msg: str) -> 'DiscordString':
+    def italic(self, msg) -> 'DiscordString':
         self.toggle_italic()
         self.add(msg)
         self.toggle_italic()
@@ -64,7 +68,9 @@ class DiscordString:
         self._txt += '_'
         return self
 
-    def emoji(self, msg: str) -> 'DiscordString':
+    def emoji(self, msg) -> 'DiscordString':
+        if not isinstance(msg, str):
+            msg = str(msg)
         self._txt += f':{msg}:'
         return self
 
@@ -75,7 +81,7 @@ class DiscordString:
     def nl(self) -> 'DiscordString':
         return self.newline()
 
-    def spoiler(self, msg: str) -> 'DiscordString':
+    def spoiler(self, msg) -> 'DiscordString':
         self.toggle_spoiler()
         self.add(msg)
         self.toggle_spoiler()
@@ -86,7 +92,7 @@ class DiscordString:
         self._txt += '||'
         return self
 
-    def strikethrough(self, msg: str) -> 'DiscordString':
+    def strikethrough(self, msg) -> 'DiscordString':
         self.toggle_strikethrough()
         self.add(msg)
         self.toggle_strikethrough()
@@ -98,7 +104,7 @@ class DiscordString:
         return self
 
     @staticmethod
-    def react(reaction: str) -> str:
+    def react(reaction) -> str:
         ds = DiscordString()
         ds.add(f'+').emoji(reaction)
         return str(ds)

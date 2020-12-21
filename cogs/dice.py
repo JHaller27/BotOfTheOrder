@@ -112,13 +112,13 @@ class DiceCog(commands.Cog):
             if not is_first:
                 ds.add(', ')
             if roll.is_max():
-                ds.bold(str(roll))
+                ds.bold(roll)
                 if explode:
                     ds.emoji('boom')
             elif roll.is_min():
-                ds.bold(str(roll))
+                ds.bold(roll)
             else:
-                ds.add(str(roll))
+                ds.add(roll)
 
         # Prime explode count
         explode_count = sum([1 for r in rolls if r.is_max()])
@@ -160,7 +160,7 @@ class DiceCog(commands.Cog):
 
         total = sum(rolls) + mod
 
-        ds.newline().bold('Total').add(': ').add(str(total))
+        ds.newline().bold('Total').add(': ').add(total)
 
         return total, ds
 
