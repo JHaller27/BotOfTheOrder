@@ -110,7 +110,7 @@ class DiceCog(commands.Cog):
 
         def _add_roll(roll: Roll, is_first: bool) -> None:
             if not is_first:
-                ds.add(', ')
+                ds.add(' + ')
             if roll.is_max():
                 ds.bold(roll)
                 if explode:
@@ -121,43 +121,54 @@ class DiceCog(commands.Cog):
                 ds.add(roll)
 
         # Prime explode count
-        explode_count = sum([1 for r in rolls if r.is_max()])
+        explode_rolls = []
 
         # Explode!
         if explode:
+            explode_count = sum([1 for r in rolls if r.is_max()])
             while explode_count > 0:
                 r = Roll(y)
                 if not r.is_max():
                     explode_count -= 1
-                rolls.append(r)
+                explode_rolls.append(r)
 
-        ds.add('[')
-
+        # Normal rolls
         first = True
         for r in rolls:
             _add_roll(r, first)
             if first:
                 first = False
 
-        ds.add(']')
+        # Modifier
+        if mod > 0:
+            ds.add(f' [+ {mod}]')
+        elif mod < 0:
+            ds.add(f' [- {mod}]')
 
-        if mod != 0:
-            ds.add(f'{mod:+}')
+        # Exploded dice
+        if len(explode_rolls) > 0:
+            ds.newline().bold('Explosion').add(': ')
 
+            first = True
+            for r in explode_rolls:
+                _add_roll(r, first)
+                if first:
+                    first = False
+
+        # Dropped rolls
         if len(dropped) > 0:
-            ds.newline().toggle_strikethrough().add('Dropped: [')
-        first = True
-        for d in dropped:
-            if first:
-                first = False
-            else:
-                ds.add(', ')
-            ds.add(str(d))
+            ds.newline().toggle_italic().add('Dropped: (')
+            first = True
+            for d in dropped:
+                if first:
+                    first = False
+                else:
+                    ds.add(' + ')
+                ds.add(str(d))
 
-        if len(dropped) > 0:
-            ds.add(']')
-            ds.toggle_strikethrough()
+            ds.add(')').toggle_italic()
 
+        # Total
         total = sum(rolls) + mod
 
         ds.newline().bold('Total').add(': ').add(total)
