@@ -148,7 +148,13 @@ class DiceCog(commands.Cog):
                 await last_msg
             last_msg = ctx.send(str(ds))
 
-            result, ds = self._roll(x, y, -adv, mod, True)
+            if adv < 0:
+                drop = DiceCog._unify_keep_drop(False, True, -adv, x)
+            elif adv > 0:
+                drop = DiceCog._unify_keep_drop(False, False, adv, x)
+            else:
+                drop = 0
+            result, ds = self._roll(x, y, drop, mod, True)
             all_results.append(result)
 
             if last_msg is not None:
