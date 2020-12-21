@@ -277,13 +277,13 @@ class DiceCog(commands.Cog):
 
         # Dropped rolls
         if len(dropped) > 0:
-            ds.newline().toggle_italic().add('Dropped: (')
+            ds.toggle_italic().add(' (dropped: ')
             first = True
             for d in dropped:
                 if first:
                     first = False
                 else:
-                    ds.add(' + ')
+                    ds.add(', ')
                 ds.add(str(d))
 
             ds.add(')').toggle_italic()
