@@ -1,3 +1,4 @@
+from utils.discord_string import DiscordString
 from random import randint
 from discord.ext import commands
 import re
@@ -24,9 +25,9 @@ class DiceCog(commands.Cog):
             if m := m['mod']:
                 mod = int(m)
 
-            result = DiceCog._roll(x, y, drop, mod, explode)
+            result, ds = DiceCog._roll(x, y, drop, mod, explode)
 
-            await ctx.send(f'You rolled: {result}')
+            await ctx.send(str(ds))
 
     @staticmethod
     def _unify_keep_drop(keep: bool, highest: bool, count: int, total: int) -> int:
@@ -53,22 +54,74 @@ class DiceCog(commands.Cog):
         return count
 
     @staticmethod
-    def _roll(x: int, y: int, drop: int, mod: int, explode: bool) -> int:
+    def _roll(x: int, y: int, drop: int, mod: int, explode: bool) -> (int, DiscordString):
+        ds = DiscordString()
+        ds.bold('Dice').add(': ')
+
         rolls = sorted([randint(1, y) for _ in range(x)])
+        dropped = []
 
         if drop < 0:
-            rolls = rolls[drop:]
+            rolls, dropped = rolls[drop:], rolls[:drop]
         elif drop > 0:
-            rolls = rolls[:drop]
+            rolls, dropped = rolls[:drop], rolls[drop:]
 
+        def _add_roll(roll: int, first):
+            if not first:
+                ds.add(', ')
+            if roll == y:
+                ds.bold(str(roll))
+                if explode:
+                    ds.emoji('boom')
+            elif roll == 1:
+                ds.bold(str(roll))
+            else:
+                ds.add(str(roll))
+
+        # Prime explode count
+        explode_count = sum([1 for r in rolls if r == y])
+
+        # Explode!
         if explode:
-            for r in rolls:
-                if r == y:
-                    rolls.append(randint(1, y))
+            while explode_count > 0:
+                r = randint(1, y)
+                if r < y:
+                    explode_count -= 1
+                rolls.append(r)
+
+        ds.add('[')
+
+        first = True
+        for r in rolls:
+            _add_roll(r, first)
+            if first:
+                first = False
+
+        ds.add(']')
+
+        if mod != 0:
+            ds.add(f'{mod:+}')
+
+        if len(dropped) > 0:
+            ds.newline().toggle_strikethrough().add('Dropped: [')
+        first = True
+        for d in dropped:
+            if first:
+                first = False
+            else:
+                ds.add(', ')
+            ds.add(str(d))
+
+        if len(dropped) > 0:
+            ds.add(']')
+            ds.toggle_strikethrough()
 
         total = sum(rolls) + mod
 
-        return total
+        ds.newline().bold('Total').add(': ').add(str(total))
+
+        return total, ds
+
 
 def setup(bot):
     bot.add_cog(DiceCog(bot))
