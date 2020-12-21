@@ -4,6 +4,48 @@ from discord.ext import commands
 import re
 
 
+class Roll:
+    _value: int
+
+    def __init__(self, size: int):
+        self._size = size
+        self._roll()
+
+    def __repr__(self) -> str:
+        return f"<Roll ({self._size})>"
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+    def __add__(self, other) -> int:
+        if isinstance(other, Roll):
+            return self.value + other.value
+
+        return self.value + other
+
+    def __radd__(self, other):
+        return self.__add__(other)
+
+    def __lt__(self, other):
+        if isinstance(other, Roll):
+            return self._value < other._value
+
+        return self._value < other
+
+    def _roll(self) -> None:
+        self._value = randint(1, self._size)
+
+    @property
+    def value(self) -> int:
+        return self._value
+
+    def is_max(self) -> bool:
+        return self._value == self._size
+
+    def is_min(self) -> bool:
+        return self._value == 1
+
+
 class DiceCog(commands.Cog):
     DICE_REGEX = re.compile(r'(?P<num>\d+)d(?P<size>\d+)(?P<kd>[kd][hl]\d+)?(?P<explode>e)?(?P<mod>[+\-]\d+)?')
 
@@ -58,7 +100,7 @@ class DiceCog(commands.Cog):
         ds = DiscordString()
         ds.bold('Dice').add(': ')
 
-        rolls = sorted([randint(1, y) for _ in range(x)])
+        rolls = sorted([Roll(y) for _ in range(x)])
         dropped = []
 
         if drop < 0:
@@ -66,26 +108,26 @@ class DiceCog(commands.Cog):
         elif drop > 0:
             rolls, dropped = rolls[:drop], rolls[drop:]
 
-        def _add_roll(roll: int, first):
-            if not first:
+        def _add_roll(roll: Roll, is_first: bool) -> None:
+            if not is_first:
                 ds.add(', ')
-            if roll == y:
+            if roll.is_max():
                 ds.bold(str(roll))
                 if explode:
                     ds.emoji('boom')
-            elif roll == 1:
+            elif roll.is_min():
                 ds.bold(str(roll))
             else:
                 ds.add(str(roll))
 
         # Prime explode count
-        explode_count = sum([1 for r in rolls if r == y])
+        explode_count = sum([1 for r in rolls if r.is_max()])
 
         # Explode!
         if explode:
             while explode_count > 0:
-                r = randint(1, y)
-                if r < y:
+                r = Roll(y)
+                if not r.is_max():
                     explode_count -= 1
                 rolls.append(r)
 
