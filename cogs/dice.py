@@ -100,6 +100,7 @@ class DiceCog(commands.Cog):
 
             all_results = []
             final_ds = DiscordString()
+            final_ds.add(ctx.message.author.mention).newline()
 
             # Roll first set of dice
             for x, y in all_dice[:-1]:
@@ -187,9 +188,13 @@ class DiceCog(commands.Cog):
             if m := m['mod']:
                 mod = int(m)
 
-            result, ds = DiceCog._roll(x, y, drop, mod, explode)
+            final_ds = DiscordString()
+            final_ds.add(ctx.message.author.mention).newline()
 
-            await ctx.send(str(ds))
+            result, ds = DiceCog._roll(x, y, drop, mod, explode)
+            final_ds += ds
+
+            await ctx.send(str(final_ds))
 
     @staticmethod
     def _unify_keep_drop(keep: bool, highest: bool, count: int, total: int) -> int:
