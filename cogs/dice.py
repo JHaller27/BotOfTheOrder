@@ -5,11 +5,15 @@ import re
 
 
 class Roll:
+    _size: int
     _value: int
+    _dropped: bool
 
     def __init__(self, size: int):
         self._size = size
         self._roll()
+
+        self._dropped = False
 
     def __repr__(self) -> str:
         return f"<Roll ({self._size})>"
@@ -39,14 +43,21 @@ class Roll:
     def value(self) -> int:
         return self._value
 
+    @property
+    def dropped(self) -> bool:
+        return self._dropped
+
     def is_max(self) -> bool:
-        return self._value == self._size
+        return not self._dropped and self._value == self._size
 
     def is_min(self) -> bool:
         return self._value == 1
 
     def explode(self) -> 'Roll':
         return Roll(self._size)
+
+    def drop(self) -> None:
+        self._dropped = True
 
 
 class DiceCog(commands.Cog):
@@ -100,15 +111,17 @@ class DiceCog(commands.Cog):
 
             all_results = []
             final_ds = DiscordString()
-            final_ds.add(ctx.message.author.mention).newline()
+            final_ds.add(ctx.message.author.mention).newline().bold('Rolling').add(': ')
+
+            rolling_ds = DiscordString()
 
             # Roll first set of dice
             for x, y in all_dice[:-1]:
-                final_ds.bold('Rolling').add(': ').add(f'{x}d{y}')
+                final_ds.add(f'{x}d{y} + ')
 
                 result, ds = self._roll(x, y, 0, 0, True)
-                final_ds.newline()
-                final_ds += ds
+                rolling_ds.newline()
+                rolling_ds += ds
 
                 all_results.append(result)
 
@@ -117,16 +130,6 @@ class DiceCog(commands.Cog):
             x = og_x + abs(adv)
 
             ds = DiscordString()
-            ds.bold('Rolling').add(': (').add(f'{og_x}d{y}')
-            if adv > 0:
-                ds.add(' advantage ').add(adv)
-            elif adv < 0:
-                ds.add(' disadvantage ').add(-adv)
-            if mod > 0:
-                ds.add(f' + {mod}')
-            elif mod < 0:
-                ds.add(f' - {-mod}')
-            ds.add(') ')
 
             ds.add(f'{x}d{y}')
             if adv > 0:
@@ -134,11 +137,13 @@ class DiceCog(commands.Cog):
             elif adv < 0:
                 ds.add(f'dh{-adv}')
 
-            if mod != 0:
-                ds.add(f'{mod:+}')
+            if mod > 0:
+                ds.add(f' + {mod}')
+            elif mod < 0:
+                ds.add(f' - {-mod}')
 
-            final_ds.newline()
             final_ds += ds
+            final_ds += rolling_ds
 
             if adv < 0:
                 drop = DiceCog._unify_keep_drop(False, True, -adv, x)
@@ -146,6 +151,7 @@ class DiceCog(commands.Cog):
                 drop = DiceCog._unify_keep_drop(False, False, adv, x)
             else:
                 drop = 0
+
             result, ds = self._roll(x, y, drop, mod, True)
             all_results.append(result)
 
@@ -162,10 +168,7 @@ class DiceCog(commands.Cog):
                     first = False
                     ds.add(result)
                 else:
-                    if result < 0:
-                        ds.add(' - ').add(result)
-                    else:
-                        ds.add(' + ').add(result)
+                    ds.add(', ').add(result)
             ds.add(') = ')
             ds.bold(total).add(' ').emoji('game_die')
 
@@ -223,20 +226,25 @@ class DiceCog(commands.Cog):
     @staticmethod
     def _roll(x: int, y: int, drop: int, mod: int, explode: bool) -> (int, DiscordString):
         ds = DiscordString()
-        ds.bold('Dice').add(': ')
 
-        rolls = sorted([Roll(y) for _ in range(x)])
+        rolls = [Roll(y) for _ in range(x)]
+
         dropped = []
-
         if drop < 0:
-            rolls, dropped = rolls[drop:], rolls[:drop]
+            dropped = sorted(rolls)[:drop]
         elif drop > 0:
-            rolls, dropped = rolls[:drop], rolls[drop:]
+            dropped = sorted(rolls)[drop:]
 
-        def _add_roll(roll: Roll, is_first: bool) -> None:
+        for d in dropped:
+            d.drop()
+
+        def _add_roll(roll: Roll, is_first: bool, sep: str) -> None:
             if not is_first:
-                ds.add(' + ')
-            if roll.is_max():
+                ds.add(sep)
+
+            if roll.dropped:
+                ds.strikethrough(roll)
+            elif roll.is_max():
                 ds.bold(roll)
                 if explode:
                     ds.emoji('boom')
@@ -245,9 +253,6 @@ class DiceCog(commands.Cog):
             else:
                 ds.add(roll)
 
-        # Prime explode rolls
-        explode_rolls = []
-
         # Explode!
         if explode:
             explodable_rolls = list([r for r in rolls if r.is_max()])
@@ -255,46 +260,29 @@ class DiceCog(commands.Cog):
                 r = explodable_rolls.pop().explode()
                 if r.is_max():
                     explodable_rolls.append(r)
-                explode_rolls.append(r)
+                rolls.append(r)
+
+        # Print rolls
 
         # Normal rolls
+        ds.bold('Result').add(': (')
+
         first = True
         for r in rolls:
-            _add_roll(r, first)
+            _add_roll(r, first, ', ')
             if first:
                 first = False
 
+        ds.add(')')
+
         # Modifier
         if mod > 0:
-            ds.add(f' [+ {mod}]')
+            ds.add(f' + {mod}')
         elif mod < 0:
-            ds.add(f' [- {-mod}]')
-
-        # Dropped rolls
-        if len(dropped) > 0:
-            ds.toggle_italic().add(' (dropped: ')
-            first = True
-            for d in dropped:
-                if first:
-                    first = False
-                else:
-                    ds.add(', ')
-                ds.add(str(d))
-
-            ds.add(')').toggle_italic()
-
-        # Exploded dice
-        if len(explode_rolls) > 0:
-            ds.newline().bold('Explosion').add(': ')
-
-            first = True
-            for r in explode_rolls:
-                _add_roll(r, first)
-                if first:
-                    first = False
+            ds.add(f' - {-mod}')
 
         # Total
-        total = sum(rolls) + sum(explode_rolls) + mod
+        total = sum(rolls) + mod
 
         ds.newline().bold('Total').add(': ').add(total)
 
