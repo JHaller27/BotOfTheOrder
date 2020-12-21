@@ -102,9 +102,3 @@ class DiscordString:
     def toggle_strikethrough(self) -> 'DiscordString':
         self._txt += '~~'
         return self
-
-    @staticmethod
-    def react(reaction) -> str:
-        ds = DiscordString()
-        ds.add(f'+').emoji(reaction)
-        return str(ds)
