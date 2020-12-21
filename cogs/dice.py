@@ -132,7 +132,7 @@ class DiceCog(commands.Cog):
             if mod > 0:
                 ds.add(f' + {mod}')
             elif mod < 0:
-                ds.add(f' - {mod}')
+                ds.add(f' - {-mod}')
             ds.add(') ')
 
             ds.add(f'{x}d{y}')
@@ -273,7 +273,7 @@ class DiceCog(commands.Cog):
         if mod > 0:
             ds.add(f' [+ {mod}]')
         elif mod < 0:
-            ds.add(f' [- {mod}]')
+            ds.add(f' [- {-mod}]')
 
         # Dropped rolls
         if len(dropped) > 0:
