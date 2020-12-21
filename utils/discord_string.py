@@ -1,14 +1,18 @@
 class DiscordString:
     _txt: str
 
-    def __init__(self):
-        self._txt = ''
+    def __init__(self, init=None):
+        self._txt = '' if init is None else init
 
     def __repr__(self):
         return f'<DiscordString>'
 
     def __str__(self):
         return self._txt
+
+    def __add__(self, other: 'DiscordString'):
+        joined = DiscordString(str(self) + str(other))
+        return joined
 
     def clear(self) -> 'DiscordString':
         self._txt = ''
