@@ -5,7 +5,7 @@ import re
 
 
 class DiceCog(commands.Cog):
-    DICE_REGEX = re.compile(r'(?P<num>\d+)d(?P<size>\d+)(?P<kd>[kd][hl]\d+)?(?P<mod>[+\-]\d+)?(?P<explode>e)?')
+    DICE_REGEX = re.compile(r'(?P<num>\d+)d(?P<size>\d+)(?P<kd>[kd][hl]\d+)?(?P<explode>e)?(?P<mod>[+\-]\d+)?')
 
     def __init__(self, bot: commands.Bot):
         self._bot = bot
