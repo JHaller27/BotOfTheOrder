@@ -98,24 +98,16 @@ class DiceCog(commands.Cog):
             if mod_dice[0] != 0:
                 all_dice.append(mod_dice)
 
-            last_msg = None
-
             all_results = []
+            final_ds = DiscordString()
 
             # Roll first set of dice
             for x, y in all_dice[:-1]:
-                if last_msg is not None:
-                    await last_msg
-                ds = DiscordString()
-                ds.bold('Rolling').add(': ').add(f'{x}d{y}')
-
-                last_msg = ctx.send(str(ds))
+                final_ds.bold('Rolling').add(': ').add(f'{x}d{y}')
 
                 result, ds = self._roll(x, y, 0, 0, True)
-
-                if last_msg is not None:
-                    await last_msg
-                last_msg = ctx.send(str(ds))
+                final_ds.newline()
+                final_ds += ds
 
                 all_results.append(result)
 
@@ -144,9 +136,8 @@ class DiceCog(commands.Cog):
             if mod != 0:
                 ds.add(f'{mod:+}')
 
-            if last_msg is not None:
-                await last_msg
-            last_msg = ctx.send(str(ds))
+            final_ds.newline()
+            final_ds += ds
 
             if adv < 0:
                 drop = DiceCog._unify_keep_drop(False, True, -adv, x)
@@ -157,9 +148,8 @@ class DiceCog(commands.Cog):
             result, ds = self._roll(x, y, drop, mod, True)
             all_results.append(result)
 
-            if last_msg is not None:
-                await last_msg
-            last_msg = ctx.send(str(ds))
+            final_ds.newline()
+            final_ds += ds
 
             total = sum(all_results)
 
@@ -178,9 +168,9 @@ class DiceCog(commands.Cog):
             ds.add(') = ')
             ds.bold(total).add(' ').emoji('game_die')
 
-            if last_msg is not None:
-                await last_msg
-            await ctx.send(str(ds))
+            final_ds.newline()
+            final_ds += ds
+            await ctx.send(str(final_ds))
 
     @commands.command()
     async def roll(self, ctx: commands.Context, roll_str: str):
