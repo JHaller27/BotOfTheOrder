@@ -45,6 +45,9 @@ class Roll:
     def is_min(self) -> bool:
         return self._value == 1
 
+    def explode(self) -> 'Roll':
+        return Roll(self._size)
+
 
 class DiceCog(commands.Cog):
     DICE_REGEX = re.compile(r'(?P<num>\d+)d(?P<size>\d+)(?P<kd>[kd][hl]\d+)?(?P<explode>e)?(?P<mod>[+\-]\d+)?')
@@ -241,16 +244,16 @@ class DiceCog(commands.Cog):
             else:
                 ds.add(roll)
 
-        # Prime explode count
+        # Prime explode rolls
         explode_rolls = []
 
         # Explode!
         if explode:
-            explode_count = sum([1 for r in rolls if r.is_max()])
-            while explode_count > 0:
-                r = Roll(y)
-                if not r.is_max():
-                    explode_count -= 1
+            explodable_rolls = list([r for r in rolls if r.is_max()])
+            while len(explodable_rolls) > 0:
+                r = explodable_rolls.pop().explode()
+                if r.is_max():
+                    explodable_rolls.append(r)
                 explode_rolls.append(r)
 
         # Normal rolls
