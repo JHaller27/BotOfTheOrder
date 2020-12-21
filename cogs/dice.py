@@ -48,9 +48,130 @@ class Roll:
 
 class DiceCog(commands.Cog):
     DICE_REGEX = re.compile(r'(?P<num>\d+)d(?P<size>\d+)(?P<kd>[kd][hl]\d+)?(?P<explode>e)?(?P<mod>[+\-]\d+)?')
+    OL_ACTION_REGEX = re.compile(r'(?P<score>\d+)?(?P<adv>[ad]\d+)?(?P<mod>[+\-]\d+)?')
+
+    OL_ATTR_DICE_MAP = [
+        (0, 0),
+        (1, 4),
+        (1, 6),
+        (1, 8),
+        (1, 10),
+        (2, 6),
+        (2, 8),
+        (2, 10),
+        (3, 8),
+        (3, 10),
+        (4, 8),
+    ]
 
     def __init__(self, bot: commands.Bot):
         self._bot = bot
+
+    @commands.group()
+    async def ol(self, ctx: commands.Context):
+        pass
+
+    @ol.command()
+    async def action(self, ctx: commands.Context, roll_str: str = ''):
+        if m := DiceCog.OL_ACTION_REGEX.search(roll_str):
+            score = 0
+            adv = 0
+            mod = 0
+
+            if x := m['score']:
+                score = int(x)
+
+            if x := m['adv']:
+                x = x.lower()
+                adv = int(x[1:])
+                if x[0] == 'd':
+                    adv = -adv
+
+            if x := m['mod']:
+                mod = int(x)
+
+            all_dice = [(1, 20)]
+            mod_dice = DiceCog.OL_ATTR_DICE_MAP[score]
+            if mod_dice[0] != 0:
+                all_dice.append(mod_dice)
+
+            last_msg = None
+
+            all_results = []
+
+            # Roll first set of dice
+            for x, y in all_dice[:-1]:
+                if last_msg is not None:
+                    await last_msg
+                ds = DiscordString()
+                ds.bold('Rolling').add(': ').add(f'{x}d{y}')
+
+                last_msg = ctx.send(str(ds))
+
+                result, ds = self._roll(x, y, 0, 0, True)
+
+                if last_msg is not None:
+                    await last_msg
+                last_msg = ctx.send(str(ds))
+
+                all_results.append(result)
+
+            # Get+adjust dice for last roll
+            og_x, y = all_dice[-1]
+            x = og_x + abs(adv)
+
+            ds = DiscordString()
+            ds.bold('Rolling').add(': (').add(f'{og_x}d{y}')
+            if adv > 0:
+                ds.add(' advantage ').add(adv)
+            elif adv < 0:
+                ds.add(' disadvantage ').add(-adv)
+            if mod > 0:
+                ds.add(f' + {mod}')
+            elif mod < 0:
+                ds.add(f' - {mod}')
+            ds.add(') ')
+
+            ds.add(f'{x}d{y}')
+            if adv > 0:
+                ds.add(f'dl{adv}')
+            elif adv < 0:
+                ds.add(f'dh{-adv}')
+
+            if mod != 0:
+                ds.add(f'{mod:+}')
+
+            if last_msg is not None:
+                await last_msg
+            last_msg = ctx.send(str(ds))
+
+            result, ds = self._roll(x, y, -adv, mod, True)
+            all_results.append(result)
+
+            if last_msg is not None:
+                await last_msg
+            last_msg = ctx.send(str(ds))
+
+            total = sum(all_results)
+
+            ds = DiscordString()
+            ds.bold('Result').add(': (')
+            first = True
+            for result in all_results:
+                if first:
+                    first = False
+                    ds.add(result)
+                else:
+                    if result < 0:
+                        ds.add(' - ').add(result)
+                    else:
+                        ds.add(' + ').add(result)
+            ds.add(') = ')
+            ds.add(total).add(' ').emoji('game_die')
+
+            if last_msg is not None:
+                await last_msg
+            await ctx.send(str(ds))
 
     @commands.command()
     async def roll(self, ctx: commands.Context, roll_str: str):
@@ -145,16 +266,6 @@ class DiceCog(commands.Cog):
         elif mod < 0:
             ds.add(f' [- {mod}]')
 
-        # Exploded dice
-        if len(explode_rolls) > 0:
-            ds.newline().bold('Explosion').add(': ')
-
-            first = True
-            for r in explode_rolls:
-                _add_roll(r, first)
-                if first:
-                    first = False
-
         # Dropped rolls
         if len(dropped) > 0:
             ds.newline().toggle_italic().add('Dropped: (')
@@ -168,8 +279,18 @@ class DiceCog(commands.Cog):
 
             ds.add(')').toggle_italic()
 
+        # Exploded dice
+        if len(explode_rolls) > 0:
+            ds.newline().bold('Explosion').add(': ')
+
+            first = True
+            for r in explode_rolls:
+                _add_roll(r, first)
+                if first:
+                    first = False
+
         # Total
-        total = sum(rolls) + mod
+        total = sum(rolls) + sum(explode_rolls) + mod
 
         ds.newline().bold('Total').add(': ').add(total)
 
