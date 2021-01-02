@@ -4,7 +4,7 @@ from discord import File
 import os
 
 # TODO import from separate repo - this is copy+pasted
-from .triangulate_wallpaper import MosaicCanvas, UrlTemplatePainter, NoisyPainter, ScatterGraph
+from triangulate_wallpaper import MosaicCanvas, UrlTemplatePainter, NoisyPainter, ScatterGraph
 
 
 # noinspection PyTypeChecker
