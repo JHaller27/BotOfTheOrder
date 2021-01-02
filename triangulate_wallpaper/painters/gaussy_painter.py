@@ -1,5 +1,5 @@
-import mosaic_random
-from graph import Point
+from .. import mosaic_random
+from triangulate_wallpaper.graph import Point
 
 from .triangle_painter import TrianglePainter
 

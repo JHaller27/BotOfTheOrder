@@ -1,4 +1,4 @@
-import mosaic_random
+from triangulate_wallpaper import mosaic_random
 
 
 class Point:

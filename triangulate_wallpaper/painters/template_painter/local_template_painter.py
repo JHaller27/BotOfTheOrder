@@ -1,6 +1,6 @@
 from PIL import Image
 
-from painters.template_painter import TemplatePainter
+from triangulate_wallpaper.painters.template_painter import TemplatePainter
 
 
 class LocalTemplatePainter(TemplatePainter):

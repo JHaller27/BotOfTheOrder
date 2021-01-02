@@ -1,4 +1,4 @@
-from graph import Point
+from triangulate_wallpaper.graph import Point
 
 from .triangle_painter import TrianglePainter
 

@@ -1,8 +1,7 @@
 from PIL import Image
 
-from graph import Point
-
-from painters.triangle_painter import TrianglePainter
+from triangulate_wallpaper.graph import Point
+from triangulate_wallpaper.painters.triangle_painter import TrianglePainter
 
 
 class TemplatePainter(TrianglePainter):

@@ -2,8 +2,8 @@ import tkinter as tk
 import io
 from PIL import Image
 
-from painters import TrianglePainter
-from graph import Point, Edge, Graph
+from triangulate_wallpaper.painters import TrianglePainter
+from triangulate_wallpaper.graph import Point, Edge, Graph
 
 
 POINT_SIZE = 2
