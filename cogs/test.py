@@ -1,4 +1,5 @@
 from discord.ext import commands
+from discord import File
 
 
 class Test(commands.Cog):
@@ -6,7 +7,12 @@ class Test(commands.Cog):
         self._bot = bot
 
     @commands.command()
+    async def triangles(self, ctx: commands.Context) -> None:
+        await ctx.send(file=File('./data/bipride.png'))
+
+    @commands.command()
     async def foo(self, ctx: commands.Context) -> None:
+        print(str(ctx))
         await ctx.send('bar')
 
 

@@ -12,6 +12,7 @@ class BotO(commands.Bot):
 bot = BotO(command_prefix='/')
 bot.load_extension('cogs.test')
 bot.load_extension('cogs.dice')
+bot.load_extension('cogs.triangulate')
 
 # Load secrets
 env_data_path = Path('.') / 'data' / 'secrets.json'
