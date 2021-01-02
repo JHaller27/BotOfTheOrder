@@ -26,7 +26,11 @@ class Triangulate(commands.Cog):
         graph = ScatterGraph(img_width, img_height, count, margin)
         graph.triangulate()
 
-        canvas.draw_graph(graph, ['color'])
+        try:
+            canvas.draw_graph(graph, ['color'])
+        except Exception as ex:
+            await ctx.send(str(ex))
+            return
 
         path = os.path.join('.', 'data', f'triangles_{ctx.author}_{img_width}x{img_height}.png')
         canvas.save_to(path)
