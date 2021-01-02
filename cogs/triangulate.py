@@ -35,10 +35,10 @@ class Triangulate(commands.Cog):
         path = os.path.join('.', 'data', f'triangles_{ctx.author}_{img_width}x{img_height}.png')
         canvas.save_to(path)
 
-        await ctx.message.delete()
         ds = DiscordString()
         ds.add(ctx.message.author.mention).newline().pre(url)
         await ctx.send(str(ds), file=File(path))
+        await ctx.message.delete()
 
         if os.path.exists(path):
             os.remove(path)
