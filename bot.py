@@ -13,6 +13,7 @@ bot = BotO(command_prefix='/')
 bot.load_extension('cogs.test')
 bot.load_extension('cogs.dice')
 # bot.load_extension('cogs.triangulate')
+bot.load_extension('cogs.troika')
 
 # Load secrets
 env_data_path = Path('.') / 'data' / 'secrets.json'
