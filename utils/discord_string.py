@@ -122,3 +122,5 @@ class DiscordString:
         list_str = sep.join(map(str_key, itr))
 
         self.add(list_str)
+
+        return self
