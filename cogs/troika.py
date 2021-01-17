@@ -1,5 +1,5 @@
 from discord.ext import commands
-from cogs.utils.fileCogs import FileCog
+from utils.fileCogs import FileCog
 
 
 class Troika(FileCog):
