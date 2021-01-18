@@ -130,7 +130,7 @@ def unify_keep_drop(keep: bool, highest: bool, count: int, total: int) -> int:
     return count
 
 
-def roll(x: int, y: int, drop: int, explode: bool) -> list:
+def roll(x: int, y: int, drop: int = 0, explode: bool = False) -> list:
     rolls = [Roll(y) for _ in range(x)]
 
     dropped = []

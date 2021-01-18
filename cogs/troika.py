@@ -3,6 +3,76 @@ from utils.fileCogs import FileCog
 from utils.discord_string import DiscordString
 import utils.dice as dice
 import random
+import json
+
+
+class Resource:
+    def __init__(self, max_val, curr_val=None):
+        self.max = max_val
+        self.curr = curr_val if curr_val is not None else max_val
+
+    def __add__(self, other: int):
+        return Resource(self.max, min(self.max, self.curr + other))
+
+    def __radd__(self, other: int) -> int:
+        return other + self.curr
+
+    def __sub__(self, other: int):
+        return Resource(self.max, max(self.max, self.curr - other))
+
+    def __rsub__(self, other: int):
+        return other - self.curr
+
+    def __str__(self) -> str:
+        return f'{self.curr}/{self.max}'
+
+    @classmethod
+    def from_dict(cls, j: dict) -> 'Resource':
+        i = cls(j.get('max'), j.get('current'))
+        return i
+
+    def to_dict(self) -> dict:
+        return {'max': self.max, 'current': self.curr}
+
+
+class Character:
+    def __init__(self, name: str, stats=None):
+        self.name = name
+        if stats is None:
+            self.skill = 4
+            self.stamina = Resource(14)
+            self.luck = Resource(7)
+        else:
+            self.skill = stats[0]
+            self.stamina = Resource(stats[1])
+            self.luck = Resource(stats[2])
+
+    @classmethod
+    def roll(cls, name: str) -> 'Character':
+        i = cls(name)
+        i.skill = sum(dice.roll(1, 3)) + 3
+        i.stamina = Resource( sum(dice.roll(2, 6)) + 12 )
+        i.luck = Resource( sum(dice.roll(1, 6)) + 6 )
+        return i
+
+    @classmethod
+    def from_dict(cls, j: dict) -> 'Character':
+        i = cls(j.get('name'))
+        i.skill = j.get('skill')
+        i.stamina = Resource.from_dict( j.get('stamina') )
+        i.luck = Resource.from_dict( j.get('luck') )
+        return i
+
+    def to_dict(self) -> dict:
+        return {
+                'name': self.name,
+                'skill': self.skill,
+                'stamina': self.stamina.to_dict(),
+                'luck': self.luck.to_dict(),
+               }
+
+    def __str__(self) -> str:
+        return f'<Character name={self.name} ({str(self.skill)}, {str(self.stamina)}, {str(self.luck)})>'
 
 
 class Troika(FileCog):
@@ -163,6 +233,64 @@ class Troika(FileCog):
     def _init_combat(self):
         self._combat_bag.clear()
         self._combat_bag.append('END')
+
+    @troika.command()
+    async def add_character(self, ctx: commands.Context, name: str, *args):
+        if len(args) == 0:
+            c = Character(name)
+        elif args[0] == 'roll':
+            c = Character.roll(name)
+        elif len(args) == 3:
+            c = Character(name, (int(args[0]), int(args[1]), int(args[2])))
+
+        obj = c.to_dict()
+
+        with self.open_user('w', ctx, 'character', name) as fp:
+            json.dump(obj, fp)
+
+        with self.open_user('w', ctx, 'curr_character') as fp:
+            fp.write(name)
+
+        ds = DiscordString()
+        ds.add(f'Saved character "{name}" for ').add(ctx.author.mention)
+
+        await ctx.send(str(ds))
+
+        await self.whoami(ctx)
+
+    @troika.command()
+    async def load_character(self, ctx: commands.Context, name: str):
+        with self.open_user('r', ctx, 'character', name) as fp:
+            obj = json.load(fp)
+        c = Character.from_dict(obj)
+
+        with self.open_user('w', ctx, 'curr_character') as fp:
+            fp.write(name)
+
+        ds = DiscordString()
+        ds.add(f'Loaded character "{name}" for ').add(ctx.author.mention)
+
+        await ctx.send(str(ds))
+
+    @troika.command()
+    async def whoami(self, ctx: commands.Context):
+        with self.open_user('r', ctx, 'curr_character') as fp:
+            name = fp.read()
+        name = name.strip()
+
+        with self.open_user('r', ctx, 'character', name) as fp:
+            obj = json.load(fp)
+        c = Character.from_dict(obj)
+
+        ds = DiscordString()
+        ds.bold(c.name).newline()
+        ds.toggle_pre_block()
+        ds.add('Skill   | ').add(c.skill).newline()
+        ds.add('Stamina | ').add(c.stamina).newline()
+        ds.add('Luck    | ').add(c.luck).newline()
+        ds.toggle_pre_block()
+
+        await ctx.send(str(ds))
 
 
 def setup(bot):

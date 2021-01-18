@@ -7,6 +7,7 @@ ILLEGAL_PATH_CHARS = ' /\\'
 
 
 def sanitize_part(part: str) -> str:
+    part = str(part)
     for ipc in ILLEGAL_PATH_CHARS:
         part = part.replace(ipc, '_')
     return part
@@ -21,7 +22,7 @@ class FileCog(commands.Cog):
         path = self._get_path(rest)
         return open(path, mode)
 
-    def open_user(self, ctx: commands.Context, *parts):
+    def open_user(self, mode: str, ctx: commands.Context, *parts):
         path = self._get_path([ctx.author.id, *parts])
         return open(path, mode)
 
