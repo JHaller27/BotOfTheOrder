@@ -71,6 +71,40 @@ class Character:
                 'luck': self.luck.to_dict(),
                }
 
+    def restore_stamina(self, amount: int) -> int:
+        if amount + self.stamina.curr > self.stamina.max:
+            amount = self.stamina.max - self.stamina.curr
+
+        self.stamina.curr += amount
+
+        return amount
+
+    def set_stamina(self, new_curr: int) -> int:
+        if new_curr > self.stamina.max:
+            new_curr = self.stamina.max
+
+        restored = new_curr - self.stamina.curr
+        self.stamina.curr += restored
+
+        return restored
+
+    def restore_luck(self, amount: int) -> int:
+        if amount + self.luck.curr > self.luck.max:
+            amount = self.luck.max - self.luck.curr
+
+        self.luck.curr += amount
+
+        return amount
+
+    def set_luck(self, new_curr: int) -> int:
+        if new_curr > self.luck.max:
+            new_curr = self.luck.max
+
+        restored = new_curr - self.luck.curr
+        self.luck.curr += restored
+
+        return restored
+
     def __str__(self) -> str:
         return f'<Character name={self.name} ({str(self.skill)}, {str(self.stamina)}, {str(self.luck)})>'
 
@@ -138,10 +172,6 @@ class Troika(FileCog):
         await ctx.send(str(ds))
 
     @troika.command()
-    async def attack(self, ctx: commands.Context, mod: str = None):
-        await self.roll(ctx, mod)
-
-    @troika.command()
     async def oops(self, ctx: commands.Context):
         with self.open('r', 'oops') as fp:
             results = [line.strip() for line in fp]
@@ -159,7 +189,12 @@ class Troika(FileCog):
         if mod is not None:
             mod = int(mod)
             dice_str += f'{mod:+}'
-        await ctx.send(dice.roll_str(dice_str))
+
+        ds = DiscordString()
+        ds.add(ctx.author.mention).newline()
+        ds += dice.roll_str(dice_str)
+
+        await ctx.send(str(ds))
 
     @troika.command()
     async def combat(self, ctx: commands.Context, *args):
@@ -274,6 +309,8 @@ class Troika(FileCog):
         c = self._get_character(ctx)
 
         ds = DiscordString()
+        ds.add(ctx.author.mention).newline()
+
         ds.bold(c.name).newline()
         ds.toggle_pre_block()
         ds.add('Skill   | ').add(c.skill).newline()
@@ -367,6 +404,7 @@ class Troika(FileCog):
             self._save_character(ctx, c)
 
         ds = DiscordString()
+        ds.add(ctx.author.mention).newline()
         ds.bold('Luck: ').add(str(c.luck))
 
         await ctx.send(str(ds))
@@ -402,39 +440,67 @@ class Troika(FileCog):
     async def stamina(self, ctx: commands.Context, mod: str):
         if mod.startswith('+') or mod.startswith('-'):
             c = self._get_character(ctx)
-            c.stamina.curr += int(mod)
+            c.restore_stamina(int(mod))
             self._save_character(ctx, c)
         else:
             c = self._get_character(ctx)
-            c.stamina.curr = int(mod)
+            c.set_stamina(int(mod))
             self._save_character(ctx, c)
 
         ds = DiscordString()
+        ds.add(ctx.author.mention).newline()
         ds.bold('Stamina: ').add(str(c.stamina))
 
         await ctx.send(str(ds))
 
+    @troika.command()
     async def rest(self, ctx: commands.Context):
         rolls = dice.roll(2, 6)
         roll_sum = sum(rolls)
 
         c = self._get_character(ctx)
-        restore = roll_sum
-        if c.stamina.curr + restore > c.stamina.max:
-            restore = c.stamina.max - c.stamina.curr
-        c.stamina.curr += restore
+        restore = c.restore_stamina(roll_sum)
         self._save_character(ctx, c)
 
         ds = DiscordString()
+        ds.add(ctx.author.mention).newline()
         ds.add('8 hours pass').newline()
-        ds.add('Restored ').bold(restore).add(' stamina').newline()
-        ds.bold('Stamina: ').add(str(c.luck))
+        ds.add('Restored ').bold(restore).add(' stamina ')
+
         ds.toggle_italic()
         ds.add('(').join(', ', rolls).add(') ').add(roll_sum).add(' ')
         ds.toggle_italic()
         ds.emoji('game_die')
+        ds.newline()
+
+        ds.bold('Stamina: ').add(str(c.stamina))
 
         await ctx.send(str(ds))
+
+    @troika.command()
+    async def attack(self, ctx: commands.Context, weapon: str, mod: str = None):
+        rolls = dice.roll(2, 6)
+        roll_sum = sum(rolls)
+
+        ds = DiscordString()
+        ds.add(ctx.author.mention).newline()
+        ds.bold('Attack:').add(' (').join(', ', rolls).add(') ')
+
+        if mod is not None:
+            mod = int(mod)
+            if mod < 0:
+                ds.add('- ').add(-mod)
+            else:
+                ds.add('+ ').add(mod)
+
+            roll_sum += mod
+
+        ds.add('= ').bold(roll_sum).newline()
+        ds.italic('Auto rolling damage...')
+
+        await ctx.send(str(ds))
+
+        await self.damage(ctx, weapon)
 
 
 def setup(bot):
