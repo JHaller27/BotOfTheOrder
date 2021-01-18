@@ -66,11 +66,7 @@ class Troika(FileCog):
 
     @troika.command()
     async def attack(self, ctx: commands.Context, mod: str = None):
-        dice_str = '2d6'
-        if mod is not None:
-            mod = int(mod)
-            dice_str += f'{mod:+}'
-        await ctx.send(dice.roll_str(dice_str))
+        await self.roll(ctx, mod)
 
     @troika.command()
     async def oops(self, ctx: commands.Context):
@@ -83,6 +79,14 @@ class Troika(FileCog):
         ds.add(choice)
 
         await ctx.send(str(ds))
+
+    @troika.command()
+    async def roll(self, ctx: commands.Context, mod: str = None):
+        dice_str = '2d6'
+        if mod is not None:
+            mod = int(mod)
+            dice_str += f'{mod:+}'
+        await ctx.send(dice.roll_str(dice_str))
 
 
 def setup(bot):
