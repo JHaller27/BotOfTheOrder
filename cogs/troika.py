@@ -38,6 +38,7 @@ class Resource:
 class Character:
     def __init__(self, name: str, stats=None):
         self.name = name
+        self._proficiencies = {}
         if stats is None:
             self.skill = 4
             self.stamina = Resource(14)
@@ -58,9 +59,14 @@ class Character:
     @classmethod
     def from_dict(cls, j: dict) -> 'Character':
         i = cls(j.get('name'))
+
         i.skill = j.get('skill')
         i.stamina = Resource.from_dict( j.get('stamina') )
         i.luck = Resource.from_dict( j.get('luck') )
+
+        if prof := j.get('proficiencies'):
+            i._proficiencies = prof
+
         return i
 
     def to_dict(self) -> dict:
@@ -69,6 +75,7 @@ class Character:
                 'skill': self.skill,
                 'stamina': self.stamina.to_dict(),
                 'luck': self.luck.to_dict(),
+                'proficiencies': self._proficiencies,
                }
 
     def restore_stamina(self, amount: int) -> int:
@@ -104,6 +111,24 @@ class Character:
         self.luck.curr += restored
 
         return restored
+
+    @property
+    def proficiencies(self) -> dict:
+        return self._proficiencies
+
+    def set_proficiency(self, name: str, value: int):
+        name = name.lower()
+
+        if value == 0:
+            self._proficiencies.pop(name, None)
+            return
+
+        self._proficiencies[name] = value
+
+    def get_proficiency(self, name: str) -> int:
+        name = name.lower()
+
+        return self._proficiencies.get(name)
 
     def __str__(self) -> str:
         return f'<Character name={self.name} ({str(self.skill)}, {str(self.stamina)}, {str(self.luck)})>'
@@ -313,9 +338,15 @@ class Troika(FileCog):
 
         ds.bold(c.name).newline()
         ds.toggle_pre_block()
-        ds.add('Skill   | ').add(c.skill).newline()
-        ds.add('Stamina | ').add(c.stamina).newline()
-        ds.add('Luck    | ').add(c.luck).newline()
+
+        main_stats = {'Skill': c.skill, 'Stamina': c.stamina, 'Luck': c.luck}
+        all_stats = main_stats | c.proficiencies
+        max_width = max(map(len, all_stats.keys())) + 1
+        fmt = '{:<%d}' % max_width
+
+        for k, v in all_stats.items():
+            ds.add(fmt.format(k)).add('| ').add(v).newline()
+
         ds.toggle_pre_block()
 
         await ctx.send(str(ds))
@@ -501,6 +532,22 @@ class Troika(FileCog):
         await ctx.send(str(ds))
 
         await self.damage(ctx, weapon)
+
+    @troika.command()
+    async def proficient(self, ctx: commands.Context, name: str, value: str):
+        value = int(value)
+
+        c = self._get_character(ctx)
+        c.set_proficiency(name, value)
+        self._save_character(ctx, c)
+
+        ds = DiscordString()
+        if value == 0:
+            ds.add('Removed proficiency with ').bold(name)
+        else:
+            ds.add('Set proficiency with ').bold(name).add(' to ').bold(c.get_proficiency(name))
+
+        await ctx.send(str(ds))
 
 
 def setup(bot):
