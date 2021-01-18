@@ -19,8 +19,10 @@ class FileCog(commands.Cog):
 
     def open(self, mode: str, *rest):
         path = self._get_path(rest)
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+        return open(path, mode)
 
+    def open_user(self, ctx: commands.Context, *parts):
+        path = self._get_path([ctx.author.id, *parts])
         return open(path, mode)
 
     def list(self, *parts):
@@ -30,4 +32,7 @@ class FileCog(commands.Cog):
     def _get_path(self, parts):
         parts = map(sanitize_part, parts)
         path = os.path.join(DATA_ROOT, self._name, *parts)
-        return path.lower()
+        path = path.lower()
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+
+        return path
