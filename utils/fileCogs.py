@@ -3,6 +3,7 @@ import os
 
 
 DATA_ROOT = "data"
+ILLEGAL_PATH_CHARS = ' /\\'
 
 
 class FileCog(commands.Cog):
@@ -22,4 +23,6 @@ class FileCog(commands.Cog):
 
     def _get_path(self, parts):
         path = os.path.join(DATA_ROOT, self._name, *parts)
+        for ipc in ILLEGAL_PATH_CHARS:
+            path.replace(ipc, '_')
         return path.lower()
