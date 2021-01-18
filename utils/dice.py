@@ -81,7 +81,7 @@ class Roll:
         self._dropped = True
 
 
-def roll_str(raw_str: str, mention=None):
+def roll_str(raw_str: str, mention=None) -> str:
     if m := DICE_REGEX.search(raw_str):
         x = int(m['num'])
         y = int(m['size'])
@@ -154,7 +154,7 @@ def roll(x: int, y: int, drop: int = 0, explode: bool = False) -> list:
     return rolls
 
 
-def print_rolls(rolls, mod: int, explode: bool) -> DiscordString:
+def print_rolls(rolls, mod: int = 0, explode: bool = None) -> DiscordString:
     ds = DiscordString()
 
     # Normal rolls

@@ -242,14 +242,11 @@ class Troika(FileCog):
             c = Character.roll(name)
         elif len(args) == 3:
             c = Character(name, (int(args[0]), int(args[1]), int(args[2])))
+        else:
+            await ctx.send('Character format not recognized')
+            return
 
-        obj = c.to_dict()
-
-        with self.open_user('w', ctx, 'character', name) as fp:
-            json.dump(obj, fp)
-
-        with self.open_user('w', ctx, 'curr_character') as fp:
-            fp.write(name)
+        self._save_character(ctx, c)
 
         ds = DiscordString()
         ds.add(f'Saved character "{name}" for ').add(ctx.author.mention)
@@ -265,22 +262,16 @@ class Troika(FileCog):
         c = Character.from_dict(obj)
 
         with self.open_user('w', ctx, 'curr_character') as fp:
-            fp.write(name)
+            fp.write(c.name)
 
         ds = DiscordString()
-        ds.add(f'Loaded character "{name}" for ').add(ctx.author.mention)
+        ds.add(f'Loaded character "{c.name}" for ').add(ctx.author.mention)
 
         await ctx.send(str(ds))
 
     @troika.command()
     async def whoami(self, ctx: commands.Context):
-        with self.open_user('r', ctx, 'curr_character') as fp:
-            name = fp.read()
-        name = name.strip()
-
-        with self.open_user('r', ctx, 'character', name) as fp:
-            obj = json.load(fp)
-        c = Character.from_dict(obj)
+        c = self._get_character(ctx)
 
         ds = DiscordString()
         ds.bold(c.name).newline()
@@ -291,6 +282,27 @@ class Troika(FileCog):
         ds.toggle_pre_block()
 
         await ctx.send(str(ds))
+
+    def _get_character(self, ctx: commands.Context) -> Character:
+        with self.open_user('r', ctx, 'curr_character') as fp:
+            name = fp.read()
+        name = name.strip()
+
+        with self.open_user('r', ctx, 'character', name) as fp:
+            obj = json.load(fp)
+        c = Character.from_dict(obj)
+
+        return c
+
+    def _save_character(self, ctx: commands.Context, c: Character):
+        name = c.name
+        obj = c.to_dict()
+
+        with self.open_user('w', ctx, 'character', name) as fp:
+            json.dump(obj, fp)
+
+        with self.open_user('w', ctx, 'curr_character') as fp:
+            fp.write(name)
 
     @troika.command()
     async def list_characters(self, ctx: commands.Context):
@@ -312,6 +324,115 @@ class Troika(FileCog):
             return name
 
         ds = DiscordString().join(', ', map(_get_name, char_list))
+
+        await ctx.send(str(ds))
+
+    @troika.command()
+    async def skill(self, ctx: commands.Context):
+        rolls = dice.roll(2, 6)
+        roll_sum = sum(rolls)
+        character = self._get_character(ctx)
+        target = character.skill
+
+        ds = DiscordString()
+        ds.add(ctx.author.mention).newline()
+        ds.add(character.name)
+        if roll_sum <= target:
+            ds.bold(' succeeds')
+        else:
+            ds.bold(' fails')
+        ds.add('!').newline()
+
+        ds.toggle_italic()
+        ds.add('(').join(', ', rolls).add(') ').add(roll_sum).add(' ')
+        ds.toggle_italic()
+        ds.emoji('game_die')
+        ds.italic(f' vs {target}')
+
+        await ctx.send(str(ds))
+
+    @troika.command()
+    async def luck(self, ctx: commands.Context, mod: str = None):
+        if mod is None:
+            await self._roll_luck(ctx)
+            return
+
+        if mod.startswith('+') or mod.startswith('-'):
+            c = self._get_character(ctx)
+            c.luck.curr += int(mod)
+            self._save_character(ctx, c)
+        else:
+            c = self._get_character(ctx)
+            c.luck.curr = int(mod)
+            self._save_character(ctx, c)
+
+        ds = DiscordString()
+        ds.bold('Luck: ').add(str(c.luck))
+
+        await ctx.send(str(ds))
+
+    async def _roll_luck(self, ctx: commands.Context):
+        rolls = dice.roll(2, 6)
+        roll_sum = sum(rolls)
+        character = self._get_character(ctx)
+        target = character.luck.curr
+
+        character.luck.curr -= 1
+        self._save_character(ctx, character)
+
+        ds = DiscordString()
+        ds.add(ctx.author.mention).newline()
+        ds.add(character.name)
+        if roll_sum <= target:
+            ds.bold(' succeeds')
+        else:
+            ds.bold(' fails')
+        ds.add('!').newline()
+
+        ds.toggle_italic()
+        ds.add('(').join(', ', rolls).add(') ').add(roll_sum).add(' ')
+        ds.toggle_italic()
+        ds.emoji('game_die')
+        ds.italic(f' vs {target}').newline()
+        ds.add('Luck: ').add(str(character.luck))
+
+        await ctx.send(str(ds))
+
+    @troika.command()
+    async def stamina(self, ctx: commands.Context, mod: str):
+        if mod.startswith('+') or mod.startswith('-'):
+            c = self._get_character(ctx)
+            c.stamina.curr += int(mod)
+            self._save_character(ctx, c)
+        else:
+            c = self._get_character(ctx)
+            c.stamina.curr = int(mod)
+            self._save_character(ctx, c)
+
+        ds = DiscordString()
+        ds.bold('Stamina: ').add(str(c.stamina))
+
+        await ctx.send(str(ds))
+
+    async def rest(self, ctx: commands.Context):
+        rolls = dice.roll(2, 6)
+        roll_sum = sum(rolls)
+
+        c = self._get_character(ctx)
+        restore = roll_sum
+        if c.stamina.curr + restore > c.stamina.max:
+            restore = c.stamina.max - c.stamina.curr
+        c.stamina.curr += restore
+        self._save_character(ctx, c)
+
+        ds = DiscordString()
+        ds.add('8 hours pass').newline()
+        ds.add('Restored ').bold(restore).add(' stamina').newline()
+        ds.bold('Stamina: ').add(str(c.luck))
+        ds.toggle_italic()
+        ds.add('(').join(', ', rolls).add(') ').add(roll_sum).add(' ')
+        ds.toggle_italic()
+        ds.emoji('game_die')
 
         await ctx.send(str(ds))
 
