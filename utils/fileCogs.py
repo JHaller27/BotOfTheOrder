@@ -30,6 +30,10 @@ class FileCog(commands.Cog):
         path = self._get_path(parts)
         return os.listdir(path)
 
+    def list_user(self, ctx: commands.Context, *parts):
+        path = self._get_path([ctx.author.id, *parts])
+        return os.listdir(path)
+
     def _get_path(self, parts):
         parts = map(sanitize_part, parts)
         path = os.path.join(DATA_ROOT, self._name, *parts)

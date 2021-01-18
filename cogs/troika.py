@@ -292,6 +292,29 @@ class Troika(FileCog):
 
         await ctx.send(str(ds))
 
+    @troika.command()
+    async def list_characters(self, ctx: commands.Context):
+        try:
+            char_list = self.list_user(ctx, 'character')
+        except FileNotFoundError:
+            await ctx.send('No characters yet!')
+            return
+
+        def _get_name(fname: str) -> str:
+            try:
+                with self.open_user('r', ctx, 'character', fname) as fp:
+                    obj = json.load(fp)
+                c = Character.from_dict(obj)
+                name = c.name
+            except (FileNotFoundError, json.JSONDecodeError):
+                name = fname
+
+            return name
+
+        ds = DiscordString().join(', ', map(_get_name, char_list))
+
+        await ctx.send(str(ds))
+
 
 def setup(bot):
     bot.add_cog(Troika(bot))
