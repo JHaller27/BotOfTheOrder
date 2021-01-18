@@ -396,11 +396,24 @@ class Troika(FileCog):
         await ctx.send(str(ds))
 
     @troika.command()
-    async def skill(self, ctx: commands.Context):
+    async def skill(self, ctx: commands.Context, name: str = None):
         rolls = dice.roll(2, 6)
         roll_sum = sum(rolls)
         character = self._get_character(ctx)
         target = character.skill
+
+        def to_int(x: str):
+            try:
+                i = int(x)
+                return i
+            except ValueError:
+                return None
+
+        if mod := to_int(name):
+            target += mod
+        elif name is not None:
+            if prof := character.get_proficiency(name):
+                target += prof
 
         ds = DiscordString()
         ds.add(ctx.author.mention).newline()
