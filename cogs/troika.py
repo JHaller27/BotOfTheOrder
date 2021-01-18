@@ -8,6 +8,9 @@ import random
 class Troika(FileCog):
     def __init__(self, bot: commands.Bot):
         super().__init__(bot, 'troika')
+        self._combat_bag = []
+        self._combat_drawn = []
+        self._init_combat()
 
     @commands.group()
     async def troika(self, ctx: commands.Context):
@@ -87,6 +90,79 @@ class Troika(FileCog):
             mod = int(mod)
             dice_str += f'{mod:+}'
         await ctx.send(dice.roll_str(dice_str))
+
+    @troika.command()
+    async def combat(self, ctx: commands.Context, *args):
+        cmd, args = args[0], args[1:]
+        cmd_map = {
+            'add': self.combat_add,
+            'show': self.combat_show,
+            'clear': self.combat_clear,
+            'reset': self.combat_reset,
+            'draw': self.combat_draw,
+        }
+
+        if cmd not in cmd_map:
+            ds = DiscordString()
+            ds.italic(f'Invalid combat command: "{cmd}"').newline()
+            ds.add('Valid commands: ').toggle_pre_line().join(', ', sorted(cmd_map.keys())).toggle_pre_line()
+            await ctx.send(str(ds))
+
+        fn = cmd_map[cmd]
+
+        # noinspection PyUnresolvedReferences,PyArgumentList
+        await fn(ctx, *args)
+
+    async def combat_add(self, ctx: commands.Context, *args):
+        count = 1
+        for a in args:
+            if a.isnumeric():
+                count = int(a)
+            else:
+                for _ in range(count):
+                    self._combat_bag.append(a)
+                await ctx.send(f'Added {count}x {a}')
+                count = 1
+
+    async def combat_show(self, ctx: commands.Context, *args):
+        sep = ', '
+
+        ds = DiscordString()
+        if len(self._combat_drawn) > 0:
+            ds.toggle_italic()
+            ds.bold('Gone:').add(' ').join(sep, self._combat_drawn)
+            ds.toggle_italic()
+
+            ds.newline()
+
+        ds.bold('Bag:').add(' ').join(sep, self._combat_bag)
+
+        await ctx.send(str(ds))
+
+    async def combat_clear(self, ctx: commands.Context, *args):
+        self._init_combat()
+        self._combat_drawn.clear()
+        await ctx.send('Combat hat cleared')
+
+    async def combat_reset(self, ctx: commands.Context, *args):
+        for c in self._combat_drawn:
+            self._combat_bag.append(c)
+        self._combat_drawn.clear()
+        await ctx.send('Combat hat reset')
+
+    async def combat_draw(self, ctx: commands.Context, *args):
+        combatant = random.choice(self._combat_bag)
+        self._combat_bag.remove(combatant)
+        self._combat_drawn.append(combatant)
+
+        await ctx.send(combatant)
+
+        if combatant == 'END':
+            await self.combat_reset(ctx)
+
+    def _init_combat(self):
+        self._combat_bag.clear()
+        self._combat_bag.append('END')
 
 
 def setup(bot):
