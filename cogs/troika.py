@@ -72,6 +72,18 @@ class Troika(FileCog):
             dice_str += f'{mod:+}'
         await ctx.send(dice.roll_str(dice_str))
 
+    @troika.command()
+    async def oops(self, ctx: commands.Context):
+        with self.open('r', 'oops') as fp:
+            results = [line.strip() for line in fp]
+        choice = random.choice(results)
+
+        ds = DiscordString()
+        ds.emoji('sparkles').bold("OOPS!").emoji('boom').newline()
+        ds.add(choice)
+
+        await ctx.send(str(ds))
+
 
 def setup(bot):
     bot.add_cog(Troika(bot))
