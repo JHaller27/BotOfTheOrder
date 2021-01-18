@@ -6,6 +6,12 @@ DATA_ROOT = "data"
 ILLEGAL_PATH_CHARS = ' /\\'
 
 
+def sanitize_part(part: str) -> str:
+    for ipc in ILLEGAL_PATH_CHARS:
+        part = part.replace(ipc, '_')
+    return part
+
+
 class FileCog(commands.Cog):
     def __init__(self, bot: commands.Bot, name: str):
         self._bot = bot
@@ -22,7 +28,6 @@ class FileCog(commands.Cog):
         return os.listdir(path)
 
     def _get_path(self, parts):
+        parts = map(sanitize_part, parts)
         path = os.path.join(DATA_ROOT, self._name, *parts)
-        for ipc in ILLEGAL_PATH_CHARS:
-            path.replace(ipc, '_')
         return path.lower()
