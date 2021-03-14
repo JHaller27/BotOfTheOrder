@@ -49,6 +49,10 @@ class DiceCog(commands.Cog):
 
             all_dice = [(1, 20)]
 
+            if score == 69:
+                await ctx.send("Nice")
+                return
+
             if score >= len(DiceCog.OL_ATTR_DICE_MAP):
                 await ctx.send("Your action is too powerful!")
                 return
