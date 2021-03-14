@@ -340,7 +340,7 @@ class Troika(FileCog):
         ds.toggle_pre_block()
 
         main_stats = {'Skill': c.skill, 'Stamina': c.stamina, 'Luck': c.luck}
-        all_stats = main_stats | c.proficiencies
+        all_stats = {**main_stats, **c.proficiencies}
         max_width = max(map(len, all_stats.keys())) + 1
         fmt = '{:<%d}' % max_width
 
