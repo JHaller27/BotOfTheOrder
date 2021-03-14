@@ -48,7 +48,17 @@ class DiceCog(commands.Cog):
                 mod = int(x)
 
             all_dice = [(1, 20)]
+
+            if score >= len(DiceCog.OL_ATTR_DICE_MAP):
+                ctx.send("Your action is too powerful")
+                return
+
+            if score < 0:
+                ctx.send("Your action isn't powerful enough")
+                return
+
             mod_dice = DiceCog.OL_ATTR_DICE_MAP[score]
+
             if mod_dice[0] != 0:
                 all_dice.append(mod_dice)
 
