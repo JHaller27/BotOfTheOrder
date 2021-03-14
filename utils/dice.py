@@ -85,6 +85,10 @@ def roll_str(raw_str: str, mention=None) -> str:
     if m := DICE_REGEX.search(raw_str):
         x = int(m['num'])
         y = int(m['size'])
+
+        if x >= 10000:
+            return "That roll is too powerful!"
+
         mod = 0
         drop = 0
         explode = m['explode'] is not None
@@ -154,13 +158,20 @@ def roll(x: int, y: int, drop: int = 0, explode: bool = False) -> list:
     return rolls
 
 
-def print_rolls(rolls, mod: int = 0, explode: bool = None) -> DiscordString:
+def print_rolls(rolls, mod: int = 0, explode: bool = None, max_rolls: int = 100) -> DiscordString:
     ds = DiscordString()
 
     # Normal rolls
     ds.bold('Result').add(': (')
 
-    ds.join(', ', rolls, lambda r: r.dstr(explode))
+    if len(rolls) > max_rolls:
+        rolls = [r for r in rolls if not r.dropped]
+
+    if len(rolls) > max_rolls:
+        ds.join(', ', rolls[:max_rolls], lambda r: r.dstr(explode))
+        ds.add(', ...')
+    else:
+        ds.join(', ', rolls, lambda r: r.dstr(explode))
 
     ds.add(')')
 
