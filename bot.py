@@ -12,7 +12,7 @@ class BotO(commands.Bot):
 bot = BotO(command_prefix='/')
 bot.load_extension('cogs.test')
 bot.load_extension('cogs.dice')
-bot.load_extension('cogs.triangulate')
+# bot.load_extension('cogs.triangulate')
 bot.load_extension('cogs.troika')
 
 # Load secrets
