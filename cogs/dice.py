@@ -30,21 +30,25 @@ class DiceCog(commands.Cog):
 
     @ol.command()
     async def action(self, ctx: commands.Context, roll_str: str = ''):
-        if m := DiceCog.OL_ACTION_REGEX.search(roll_str):
+        m = DiceCog.OL_ACTION_REGEX.search(roll_str)
+        if m is not None:
             score = 0
             adv = 0
             mod = 0
 
-            if x := m['score']:
+            x = m['score']
+            if x is not None:
                 score = int(x)
 
-            if x := m['adv']:
+            x = m['adv']
+            if x is not None:
                 x = x.lower()
                 adv = int(x[1:])
                 if x[0] == 'd':
                     adv = -adv
 
-            if x := m['mod']:
+            x = m['mod']
+            if x is not None:
                 mod = int(x)
 
             all_dice = [(1, 20)]
@@ -113,7 +117,8 @@ class DiceCog(commands.Cog):
 
     @commands.command()
     async def roll(self, ctx: commands.Context, roll_str: str):
-        if result := dice.roll_str(roll_str, ctx.author.mention):
+        result = dice.roll_str(roll_str, ctx.author.mention)
+        if result is not None:
             await ctx.send(result)
 
 

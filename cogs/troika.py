@@ -64,7 +64,8 @@ class Character:
         i.stamina = Resource.from_dict( j.get('stamina') )
         i.luck = Resource.from_dict( j.get('luck') )
 
-        if prof := j.get('proficiencies'):
+        prof = j.get('proficiencies')
+        if prof is not None:
             i._proficiencies = prof
 
         return i
@@ -409,10 +410,12 @@ class Troika(FileCog):
             except ValueError:
                 return None
 
-        if mod := to_int(name):
+        mod = to_int(name)
+        if mod is not None:
             target += mod
         elif name is not None:
-            if prof := character.get_proficiency(name):
+            prof = character.get_proficiency(name)
+            if prof is not None:
                 target += prof
 
         ds = DiscordString()

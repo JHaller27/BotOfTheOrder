@@ -82,7 +82,8 @@ class Roll:
 
 
 def roll_str(raw_str: str, mention=None) -> str:
-    if m := DICE_REGEX.search(raw_str):
+    m = DICE_REGEX.search(raw_str)
+    if m is not None:
         x = int(m['num'])
         y = int(m['size'])
 
@@ -93,10 +94,12 @@ def roll_str(raw_str: str, mention=None) -> str:
         drop = 0
         explode = m['explode'] is not None
 
-        if kd := m['kd']:
+        kd = m['kd']
+        if kd is not None:
             drop = unify_keep_drop(kd[0] == 'k', kd[1] == 'h', int(kd[2:]), x)
 
-        if m := m['mod']:
+        m = m['mod']
+        if m is not None:
             mod = int(m)
 
         final_ds = DiscordString()
@@ -187,4 +190,3 @@ def print_rolls(rolls, mod: int = 0, explode: bool = None, max_rolls: int = 100)
     ds.newline().bold('Total').add(': ').add(total).add(' ').emoji('game_die')
 
     return ds
-
