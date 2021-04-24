@@ -1,0 +1,12 @@
+qovery:
+  key: jtme9xokl7cc63cp/gb8s60ik4dbbgg4k/hn1rqaq9i2b7ag1x
+application:
+  name: bot-of-the-order
+  project: bot-of-the-order
+  publicly_accessible: true
+routers:
+- name: main
+  routes:
+  - application_name: bot-of-the-order
+    paths:
+    - /*
