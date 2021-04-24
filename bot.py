@@ -1,6 +1,6 @@
-import json
+import os
+import sys
 from discord.ext import commands
-from pathlib import Path
 
 
 class BotO(commands.Bot):
@@ -15,11 +15,10 @@ bot.load_extension('cogs.dice')
 # bot.load_extension('cogs.triangulate')
 bot.load_extension('cogs.troika')
 
-# Load secrets
-env_data_path = Path('.') / 'data' / 'secrets.json'
-with open(env_data_path, 'r') as fp:
-    secrets = json.load(fp)
-
 # Run Bot
-bot_token = secrets['DISCORD_TOKEN']
+token_env_name = 'DISCORD_TOKEN'
+bot_token = os.environ.get(token_env_name)
+if bot_token is None:
+    print(f"'{token_env_name}' not found in environment. Failed to start bot.", file=sys.stderr)
+    sys.exit(1)
 bot.run(bot_token)
