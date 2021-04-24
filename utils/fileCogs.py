@@ -19,22 +19,22 @@ class FileCog(commands.Cog):
         self._name = name
 
     def open(self, mode: str, *rest):
-        path = self._get_path(rest)
+        path = self.get_path(rest)
         return open(path, mode)
 
     def open_user(self, mode: str, ctx: commands.Context, *parts):
-        path = self._get_path([ctx.author.id, *parts])
+        path = self.get_path([ctx.author.id, *parts])
         return open(path, mode)
 
     def list(self, *parts):
-        path = self._get_path(parts)
+        path = self.get_path(parts)
         return os.listdir(path)
 
     def list_user(self, ctx: commands.Context, *parts):
-        path = self._get_path([ctx.author.id, *parts])
+        path = self.get_path([ctx.author.id, *parts])
         return os.listdir(path)
 
-    def _get_path(self, parts):
+    def get_path(self, parts):
         parts = map(sanitize_part, parts)
         path = os.path.join(DATA_ROOT, self._name, *parts)
         path = path.lower()

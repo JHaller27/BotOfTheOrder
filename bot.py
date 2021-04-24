@@ -14,6 +14,7 @@ bot.load_extension('cogs.test')
 bot.load_extension('cogs.dice')
 # bot.load_extension('cogs.triangulate')
 bot.load_extension('cogs.troika')
+bot.load_extension('cogs.ingsays')
 
 # Run Bot
 token_env_name = 'DISCORD_TOKEN'
