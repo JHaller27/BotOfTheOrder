@@ -3,6 +3,11 @@ application:
   name: "botoftheorder"
   project: "bot-of-the-order"
   organization: "QoveryCommunity"
+  storage:
+  - name: "data"
+    size: "10"
+    type: "ssd"
+    mount_point: "/mnt/data"
 routers:
 - name: "main-botoftheorder"
   routes:
