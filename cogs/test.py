@@ -1,5 +1,5 @@
 from discord.ext import commands
-from utils.safe_run import safe_run
+from utils.utils import safe_run
 
 
 class Test(commands.Cog):
