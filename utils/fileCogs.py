@@ -2,7 +2,8 @@ from discord.ext import commands
 import os
 
 
-DATA_ROOT = "data"
+DATA_ROOT = os.environ.get("BOTO_DATA") or "data"
+print(f"Using data path '{DATA_ROOT}'")
 ILLEGAL_PATH_CHARS = ' /\\'
 
 
@@ -19,24 +20,34 @@ class FileCog(commands.Cog):
         self._name = name
 
     def open(self, mode: str, *rest):
-        path = self._get_path(rest)
+        path = self.get_path(rest)
         return open(path, mode)
 
     def open_user(self, mode: str, ctx: commands.Context, *parts):
-        path = self._get_path([ctx.author.id, *parts])
+        path = self.get_path([ctx.author.id, *parts])
         return open(path, mode)
 
     def list(self, *parts):
-        path = self._get_path(parts)
+        path = self.get_path(parts)
         return os.listdir(path)
 
     def list_user(self, ctx: commands.Context, *parts):
-        path = self._get_path([ctx.author.id, *parts])
+        path = self.get_path([ctx.author.id, *parts])
         return os.listdir(path)
 
-    def _get_path(self, parts):
-        parts = map(sanitize_part, parts)
-        path = os.path.join(DATA_ROOT, self._name, *parts)
+    def delete(self, *parts):
+        path = self.get_path(parts)
+        os.remove(path)
+
+    def delete_user(self, ctx: commands.Context, *parts):
+        path = self.get_path([ctx.author.id, *parts])
+        os.remove(path)
+
+    def get_path(self, parts):
+        path = os.path.join(DATA_ROOT, self._name)
+        if len(parts) > 0:
+            parts = map(sanitize_part, parts)
+            path = os.path.join(path, *parts)
         path = path.lower()
         os.makedirs(os.path.dirname(path), exist_ok=True)
 

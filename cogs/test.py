@@ -1,5 +1,5 @@
 from discord.ext import commands
-from discord import File
+from utils.utils import safe_run
 
 
 class Test(commands.Cog):
@@ -8,8 +8,13 @@ class Test(commands.Cog):
 
     @commands.command()
     async def foo(self, ctx: commands.Context) -> None:
-        # print(str(ctx))
         await ctx.send('bar')
+
+    @commands.command(name="toint")
+    @safe_run
+    async def convert_to_int(self, ctx: commands.Context, val: str, base: str = None):
+        ival = int(val) if base is None else int(val, int(base))
+        await ctx.send(str(ival))
 
 
 def setup(bot):
