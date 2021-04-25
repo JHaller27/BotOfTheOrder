@@ -34,6 +34,14 @@ class FileCog(commands.Cog):
         path = self.get_path([ctx.author.id, *parts])
         return os.listdir(path)
 
+    def delete(self, *parts):
+        path = self.get_path(parts)
+        os.remove(path)
+
+    def delete_user(self, ctx: commands.Context, *parts):
+        path = self.get_path([ctx.author.id, *parts])
+        os.remove(path)
+
     def get_path(self, parts):
         path = os.path.join(DATA_ROOT, self._name)
         if len(parts) > 0:

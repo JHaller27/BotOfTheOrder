@@ -55,6 +55,13 @@ class IngSays(FileCog):
 
         await ctx.send(file=discord.File(path))
 
+    @commands.command(name="ingforgets")
+    @safe_run
+    async def drop(self, ctx: commands.Context, *names):
+        for name in names:
+            self.delete(f"{name}.mp3")
+            await ctx.send(f"Successfully forgot '{name}'")
+
 
 def setup(bot):
     bot.add_cog(IngSays(bot))
