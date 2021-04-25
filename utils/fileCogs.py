@@ -35,8 +35,10 @@ class FileCog(commands.Cog):
         return os.listdir(path)
 
     def get_path(self, parts):
-        parts = map(sanitize_part, parts)
-        path = os.path.join(DATA_ROOT, self._name, *parts)
+        path = os.path.join(DATA_ROOT, self._name)
+        if len(parts) > 0:
+            parts = map(sanitize_part, parts)
+            path = os.path.join(path, *parts)
         path = path.lower()
         os.makedirs(os.path.dirname(path), exist_ok=True)
 
