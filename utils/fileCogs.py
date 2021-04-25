@@ -2,7 +2,8 @@ from discord.ext import commands
 import os
 
 
-DATA_ROOT = "data"
+DATA_ROOT = os.environ.get("BOTO_DATA") or "data"
+print(f"Using data path '{DATA_ROOT}'")
 ILLEGAL_PATH_CHARS = ' /\\'
 
 
