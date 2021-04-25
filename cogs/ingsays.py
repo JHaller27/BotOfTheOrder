@@ -28,18 +28,12 @@ class IngSays(FileCog):
 
         await ctx.send(str(ds))
 
-    @commands.command(name='ingsays')
+    @commands.command(name='ingwillsay')
     @safe_run
-    async def ingsays(self, ctx: commands.Context, name: str = None) -> None:
+    async def _save(self, ctx: commands.Context, name: str) -> None:
         attachments = ctx.message.attachments
-
-        if len(attachments) > 0:
-            for att in attachments:
-                await self._save(ctx, name, att)
-        else:
-            await self._get(ctx, name)
-
-    async def _save(self, ctx: commands.Context, name: str, attachment: discord.Attachment) -> None:
+        assert len(attachments) > 0
+        attachment = attachments[0]
         if name is not None:
             path = self.get_path([f"{name}.mp3"])
         else:
@@ -48,12 +42,12 @@ class IngSays(FileCog):
         await attachment.save(path)
         await ctx.send(f"Saved {attachment.content_type} with tag '{name}'")
 
-    async def _get(self, ctx: commands.Context, name: str) -> None:
-        assert name is not None, "No name provided"
-
-        path = self.get_path([f"{name}.mp3"])
-
-        await ctx.send(file=discord.File(path))
+    @commands.command(name='ingsays')
+    @safe_run
+    async def _get(self, ctx: commands.Context, *names) -> None:
+        for name in names:
+            path = self.get_path([f"{name}.mp3"])
+            await ctx.send(file=discord.File(path))
 
     @commands.command(name="ingforgets")
     @safe_run
